@@ -23,6 +23,7 @@ class User(SQLModel, table=True):
     __tablename__ = "users"
     
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    full_name: str = Field(max_length=255, nullable=False)
     email: str = Field(max_length=255, unique=True, index=True, nullable=False)
     hashed_password: str = Field(max_length=255, nullable=False)
     role: str = Field(max_length=20, nullable=False)  # "admin" or "pet_owner"

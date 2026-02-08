@@ -6,20 +6,33 @@ This module initializes the FastAPI application with:
 - CORS middleware configuration
 - Database table creation on startup
 - API documentation at /docs
+- Logging configuration
 
 Requirements: 11.1, 12.8
 """
 
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from app.core.config import BACKEND_CORS_ORIGINS
+from app.core.config import BACKEND_CORS_ORIGINS, LOG_LEVEL
 from app.core.database import init_db
 from app.features.auth.router import router as auth_router
 from app.features.pets.router import router as pets_router
 from app.features.appointments.router import router as appointments_router
 from app.features.clinic.router import router as clinic_router
+
+# Configure logging
+logging.basicConfig(
+    level=getattr(logging, LOG_LEVEL, logging.INFO),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler()
+    ]
+)
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -34,14 +47,19 @@ async def lifespan(app: FastAPI):
     Requirements: 12.8
     """
     # Startup: Create database tables
-    print("Initializing database tables...")
-    init_db()
-    print("Database tables initialized successfully.")
+    logger.info("Starting Vet Clinic Scheduling System API...")
+    logger.info("Initializing database tables...")
+    try:
+        init_db()
+        logger.info("Database tables initialized successfully.")
+    except Exception as e:
+        logger.error(f"Failed to initialize database: {str(e)}")
+        raise
     
     yield
     
     # Shutdown: Cleanup (if needed in the future)
-    print("Application shutting down...")
+    logger.info("Application shutting down...")
 
 
 # Initialize FastAPI application
@@ -65,12 +83,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+logger.info(f"CORS configured with origins: {BACKEND_CORS_ORIGINS}")
+
 
 # Include all feature routers
 app.include_router(auth_router)
 app.include_router(pets_router)
 app.include_router(appointments_router)
 app.include_router(clinic_router)
+
+logger.info("All routers registered successfully")
 
 
 @app.get("/", tags=["Root"])

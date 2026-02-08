@@ -244,6 +244,12 @@ Once running, access:
 
 ## 🔐 Authentication Flow
 
+### Password Requirements
+
+- **Minimum length**: 8 characters
+- **Maximum length**: 64 characters
+- Passwords are hashed using bcrypt before storage
+
 ### 1. Register a New User
 
 ```bash
@@ -263,6 +269,10 @@ Content-Type: application/json
   "token_type": "bearer"
 }
 ```
+
+**Error Responses:**
+- `400 Bad Request`: Password too short/long or email already registered
+- `422 Unprocessable Entity`: Invalid email format
 
 ### 2. Login
 
@@ -406,6 +416,50 @@ curl -X POST http://localhost:8000/api/v1/appointments \
 - **Completed/Cancelled** → Cannot be changed
 
 ## 🐛 Troubleshooting
+
+### Database Schema Issues
+
+```
+psycopg2.errors.UndefinedColumn: column appointments.user_id does not exist
+```
+
+**Solution**: The database schema is out of sync. Run the migration script:
+
+```bash
+cd backend
+python migrate_add_user_id.py
+```
+
+Or for development (deletes all data):
+```bash
+python reset_database.py
+```
+
+See `DATABASE_MANAGEMENT.md` for detailed instructions.
+
+### Password Validation Errors
+
+```
+400 Bad Request: Password must be at least 8 characters long
+```
+
+**Solution**: Ensure password is between 8-64 characters. Bcrypt has a 72-byte limit, so we enforce 64 characters for safety.
+
+### Bcrypt Errors
+
+```
+AttributeError: module 'bcrypt' has no attribute '__about__'
+ValueError: password cannot be longer than 72 bytes
+```
+
+**Solution**: The application now uses bcrypt directly instead of through passlib to avoid version detection issues. This is already implemented in the code.
+
+If you still see errors:
+1. Ensure bcrypt is installed: `pip install bcrypt==4.1.3`
+2. Restart the application
+3. Check logs with `LOG_LEVEL=DEBUG` for detailed information
+
+**Note**: The fix uses direct bcrypt implementation which is more reliable and provides better error messages.
 
 ### Database Connection Issues
 

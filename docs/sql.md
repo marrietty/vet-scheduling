@@ -59,10 +59,11 @@ CREATE INDEX idx_pets_species ON pets(species);
 CREATE TABLE appointments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     pet_id UUID NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     start_time TIMESTAMP NOT NULL,
     end_time TIMESTAMP NOT NULL,
-    service_type VARCHAR(50),
-    status VARCHAR(20),
+    service_type VARCHAR(50) NOT NULL CHECK (service_type IN ('vaccination', 'routine', 'surgery', 'emergency')),
+    status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'cancelled', 'completed')),
     notes TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -70,6 +71,7 @@ CREATE TABLE appointments (
 
 -- Create indexes for appointments table
 CREATE INDEX idx_appointments_pet_id ON appointments(pet_id);
+CREATE INDEX idx_appointments_user_id ON appointments(user_id);
 CREATE INDEX idx_appointments_start_time ON appointments(start_time);
 CREATE INDEX idx_appointments_end_time ON appointments(end_time);
 CREATE INDEX idx_appointments_status ON appointments(status);
@@ -125,7 +127,7 @@ CREATE TRIGGER update_clinic_status_updated_at
 -- VIEWS FOR COMMON QUERIES
 -- ============================================================================
 
--- View: Appointments with pet and owner details
+-- View: Appointments with pet, owner, and booking user details
 CREATE OR REPLACE VIEW appointments_detailed AS
 SELECT 
     a.id AS appointment_id,
@@ -140,13 +142,17 @@ SELECT
     p.name AS pet_name,
     p.species AS pet_species,
     p.breed AS pet_breed,
-    u.id AS owner_id,
-    u.full_name AS owner_name,
-    u.email AS owner_email,
-    u.phone AS owner_phone
+    owner.id AS owner_id,
+    owner.full_name AS owner_name,
+    owner.email AS owner_email,
+    owner.phone AS owner_phone,
+    booking_user.id AS booking_user_id,
+    booking_user.full_name AS booking_user_name,
+    booking_user.email AS booking_user_email
 FROM appointments a
 INNER JOIN pets p ON a.pet_id = p.id
-INNER JOIN users u ON p.owner_id = u.id;
+INNER JOIN users owner ON p.owner_id = owner.id
+INNER JOIN users booking_user ON a.user_id = booking_user.id;
 
 -- View: Pets with owner details and vaccination status
 CREATE OR REPLACE VIEW pets_detailed AS

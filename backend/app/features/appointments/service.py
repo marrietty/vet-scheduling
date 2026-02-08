@@ -1,7 +1,8 @@
 """Appointment service for business logic."""
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 import uuid
+
 
 from app.features.appointments.models import Appointment
 from app.features.appointments.repository import AppointmentRepository
@@ -92,8 +93,8 @@ class AppointmentService:
             raise ForbiddenException("You can only book for your own pets")
         
         # 2. Validate time is in future (Requirement 5.4)
-        if start_time <= datetime.utcnow():
-            raise BadRequestException("Start time must be in the future")
+        if start_time <= datetime.now(timezone.utc):
+            raise BadRequestException("Appointment time must be in the future")
         
         # 3. Calculate end time (Requirement 5.5)
         end_time = calculate_end_time(start_time, service_type)

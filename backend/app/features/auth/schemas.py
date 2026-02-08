@@ -7,7 +7,7 @@ This module defines Pydantic schemas for authentication endpoints:
 - TokenResponse: JWT token response after successful authentication
 """
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 class RegisterRequest(BaseModel):
@@ -15,11 +15,33 @@ class RegisterRequest(BaseModel):
     Request schema for user registration.
     
     Attributes:
+        full_name: Full name of the user
         email: Valid email address for the user account
-        password: Password for the user account (will be hashed before storage)
+        password: Password for the user account (8-64 characters, will be hashed before storage)
     """
+    full_name: str = Field(
+        ...,
+        min_length=1,
+        max_length=200,
+        description="Full name of the user"
+    )
     email: EmailStr
-    password: str
+    password: str = Field(
+        ..., 
+        min_length=8, 
+        max_length=64,
+        description="Password must be 8-64 characters long"
+    )
+    
+    @field_validator('password')
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        """Validate password meets requirements."""
+        if len(v) < 8:
+            raise ValueError('Password must be at least 8 characters long')
+        if len(v) > 64:
+            raise ValueError('Password must be at most 64 characters long')
+        return v
 
 
 class LoginRequest(BaseModel):

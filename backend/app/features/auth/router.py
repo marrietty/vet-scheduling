@@ -61,7 +61,8 @@ def register(
     # Register user (handles validation, role assignment, password hashing)
     user = auth_service.register(
         email=request.email,
-        password=request.password
+        password=request.password,
+        full_name=request.full_name
     )
     
     # Auto-login: Create JWT token for the newly registered user
