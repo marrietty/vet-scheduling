@@ -9,6 +9,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- ============================================================================
 -- DROP EXISTING TABLES (for clean setup)
 -- ============================================================================
+DROP TABLE IF EXISTS token_blacklist CASCADE;
 DROP TABLE IF EXISTS appointments CASCADE;
 DROP TABLE IF EXISTS pets CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
@@ -24,6 +25,8 @@ CREATE TABLE users (
     email VARCHAR(255) NOT NULL UNIQUE,
     hashed_password VARCHAR(255) NOT NULL,
     phone VARCHAR(20),
+    city VARCHAR(100),
+    preferences JSONB DEFAULT '{}',
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -43,6 +46,7 @@ CREATE TABLE pets (
     breed VARCHAR(100),
     date_of_birth DATE,
     weight DECIMAL(5, 2), -- in kg, e.g., 30.50
+    notes TEXT,
     medical_history JSONB DEFAULT '{}',
     last_vaccination TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -63,7 +67,7 @@ CREATE TABLE appointments (
     start_time TIMESTAMP NOT NULL,
     end_time TIMESTAMP NOT NULL,
     service_type VARCHAR(50) NOT NULL CHECK (service_type IN ('vaccination', 'routine', 'surgery', 'emergency')),
-    status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'cancelled', 'completed')),
+    status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'cancelled', 'completed', 'scheduled')),
     notes TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -91,6 +95,22 @@ CREATE TABLE clinic_status (
 -- Insert initial clinic status (single row table)
 INSERT INTO clinic_status (id, status, status_message, updated_at) 
 VALUES (1, 'open', 'Open from 8 AM to 6 PM', CURRENT_TIMESTAMP);
+
+-- ============================================================================
+-- TOKEN BLACKLIST TABLE (for secure logout)
+-- ============================================================================
+CREATE TABLE token_blacklist (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    token TEXT NOT NULL UNIQUE,
+    expires_at TIMESTAMP NOT NULL,
+    blacklisted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Create indexes for token_blacklist table
+CREATE INDEX idx_token_blacklist_token ON token_blacklist(token);
+CREATE INDEX idx_token_blacklist_expires_at ON token_blacklist(expires_at);
+CREATE INDEX idx_token_blacklist_user_id ON token_blacklist(user_id);
 
 -- ============================================================================
 -- TRIGGERS FOR AUTOMATIC UPDATED_AT

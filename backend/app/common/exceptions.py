@@ -6,6 +6,10 @@ These exceptions provide consistent error responses across the API:
 - ForbiddenException (403): Access denied / insufficient permissions
 - BadRequestException (400): Invalid request data or business rule violation
 - UnauthorizedException (401): Authentication failure
+- TokenBlacklistedException (401): Blacklisted token used for authentication
+- ProfileUpdateForbiddenException (403): Cross-user profile update attempt
+- AppointmentRescheduleForbiddenException (403): Appointment ownership violation
+- TimeSlotUnavailableException (409): Double booking / time slot conflict
 """
 
 from fastapi import HTTPException, status
@@ -93,4 +97,89 @@ class UnauthorizedException(HTTPException):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=message,
             headers={"WWW-Authenticate": "Bearer"}
+        )
+
+
+class TokenBlacklistedException(HTTPException):
+    """
+    Raised when a blacklisted token is used for authentication.
+    
+    Returns HTTP 401 status code with WWW-Authenticate header.
+    
+    This exception is thrown when a user attempts to use a token that has been
+    invalidated through logout or other security measures.
+    
+    Example:
+        raise TokenBlacklistedException()
+        # Returns: {"detail": "Token has been invalidated"}
+    """
+    
+    def __init__(self, message: str = "Token has been invalidated"):
+        super().__init__(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=message,
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
+
+class ProfileUpdateForbiddenException(HTTPException):
+    """
+    Raised when a user attempts to update another user's profile.
+    
+    Returns HTTP 403 status code.
+    
+    This exception enforces the security rule that users can only modify
+    their own profile information.
+    
+    Example:
+        raise ProfileUpdateForbiddenException()
+        # Returns: {"detail": "Cannot access another user's profile"}
+    """
+    
+    def __init__(self, message: str = "Cannot access another user's profile"):
+        super().__init__(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=message
+        )
+
+
+class AppointmentRescheduleForbiddenException(HTTPException):
+    """
+    Raised when a user attempts to reschedule an appointment they don't own.
+    
+    Returns HTTP 403 status code.
+    
+    This exception enforces the business rule that users can only reschedule
+    appointments for their own pets.
+    
+    Example:
+        raise AppointmentRescheduleForbiddenException()
+        # Returns: {"detail": "You can only reschedule appointments for your own pets"}
+    """
+    
+    def __init__(self, message: str = "You can only reschedule appointments for your own pets"):
+        super().__init__(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=message
+        )
+
+
+class TimeSlotUnavailableException(HTTPException):
+    """
+    Raised when attempting to schedule or reschedule to an unavailable time slot.
+    
+    Returns HTTP 409 status code (Conflict).
+    
+    This exception is thrown when a requested time slot conflicts with an existing
+    appointment, preventing double bookings.
+    
+    Example:
+        raise TimeSlotUnavailableException()
+        # Returns: {"detail": "The requested time slot is not available"}
+    """
+    
+    def __init__(self, message: str = "The requested time slot is not available"):
+        super().__init__(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=message
         )

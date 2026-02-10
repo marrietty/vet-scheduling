@@ -237,7 +237,7 @@ This implementation plan breaks down the development of a REST API backend for a
     - Test error responses and status codes
     - _Requirements: 2.1, 2.2, 2.4, 10.1, 10.2, 10.3, 10.4_
 
-- [~] 10. Final checkpoint - Ensure all tests pass
+- [ ] 10. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

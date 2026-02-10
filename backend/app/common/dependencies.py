@@ -17,6 +17,8 @@ from app.core.database import get_session
 from app.infrastructure.auth import verify_token
 from app.features.users.models import User
 from app.features.users.repository import UserRepository
+from app.features.auth.repository import TokenBlacklistRepository
+from app.features.auth.service import AuthService
 from app.common.exceptions import UnauthorizedException, NotFoundException, ForbiddenException
 
 # HTTP Bearer token security scheme
@@ -31,8 +33,8 @@ def get_current_user(
     Get authenticated user from JWT token.
     
     This dependency extracts the JWT token from the Authorization header,
-    validates it, retrieves the user from the database, and checks if the
-    user account is active.
+    validates it, checks if it's blacklisted, retrieves the user from the 
+    database, and checks if the user account is active.
     
     Args:
         credentials: HTTP Bearer token credentials from the request header
@@ -42,7 +44,7 @@ def get_current_user(
         Authenticated User object
         
     Raises:
-        UnauthorizedException: If token is invalid, expired, or missing user ID
+        UnauthorizedException: If token is invalid, expired, blacklisted, or missing user ID
         NotFoundException: If user ID from token doesn't exist in database
         ForbiddenException: If user account is deactivated
         
@@ -55,12 +57,19 @@ def get_current_user(
         - 2.5: Extract user identity and role from valid JWT token
         - 2.6: Reject invalid or expired JWT tokens
         - 2.7: Reject requests with no JWT token
+        - 1.2: Reject blacklisted tokens
     """
     # Extract token from credentials
     token = credentials.credentials
     
     # Verify and decode token (raises UnauthorizedException if invalid)
     payload = verify_token(token)
+    
+    # Check if token is blacklisted (Requirement 1.2)
+    token_blacklist_repo = TokenBlacklistRepository(session)
+    user_repo = UserRepository(session)
+    auth_service = AuthService(user_repo, token_blacklist_repo)
+    auth_service.verify_token_not_blacklisted(token)
     
     # Extract user ID from token payload
     user_id_str = payload.get("sub")
@@ -74,7 +83,6 @@ def get_current_user(
         raise UnauthorizedException("Invalid token: malformed user ID")
     
     # Retrieve user from database
-    user_repo = UserRepository(session)
     user = user_repo.get_by_id(user_id)
     
     if not user:

@@ -12,6 +12,7 @@ from app.features.users.models import User
 from app.features.pets.models import Pet
 from app.features.appointments.models import Appointment
 from app.features.clinic.models import ClinicStatus
+from app.features.auth.models import TokenBlacklist
 
 def reset_database():
     """Drop all tables and recreate them."""
@@ -64,6 +65,7 @@ def reset_database():
         print("  ✓ pets table")
         print("  ✓ appointments table (with user_id column)")
         print("  ✓ clinic_status table")
+        print("  ✓ token_blacklist table")
         
         print("\nYou can now:")
         print("  1. Start the API server: uvicorn app.main:app --reload")

@@ -11,3 +11,5 @@ backend/.env
 
 # --- IDE Settings (Optional but recommended) ---
 .vscode/
+
+.md
