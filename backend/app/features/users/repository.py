@@ -57,3 +57,52 @@ class UserRepository:
         self.session.flush()
         self.session.refresh(user)
         return user
+    
+    def get_user_profile(self, user_id: uuid.UUID) -> Optional[User]:
+        """Get user profile by ID.
+        
+        Args:
+            user_id: UUID of the user to retrieve
+            
+        Returns:
+            User object if found, None otherwise
+        """
+        return self.session.get(User, user_id)
+    
+    def update_user_profile(self, user_id: uuid.UUID, updates: dict) -> Optional[User]:
+        """Update user profile with provided fields.
+        
+        Args:
+            user_id: UUID of the user to update
+            updates: Dictionary of fields to update
+            
+        Returns:
+            Updated User object if found, None otherwise
+        """
+        user = self.session.get(User, user_id)
+        if user is None:
+            return None
+        
+        # Update only the fields provided in the updates dictionary
+        for key, value in updates.items():
+            if hasattr(user, key):
+                setattr(user, key, value)
+        
+        self.session.add(user)
+        self.session.flush()
+        self.session.refresh(user)
+        return user
+    
+    def email_exists_for_other_user(self, email: str, user_id: uuid.UUID) -> bool:
+        """Check if an email is already used by a different user.
+        
+        Args:
+            email: Email address to check
+            user_id: UUID of the current user (to exclude from check)
+            
+        Returns:
+            True if email exists for another user, False otherwise
+        """
+        statement = select(User).where(User.email == email, User.id != user_id)
+        existing_user = self.session.exec(statement).first()
+        return existing_user is not None
