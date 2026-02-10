@@ -67,6 +67,7 @@ def create_pet(
         date_of_birth=request.date_of_birth,
         last_vaccination=request.last_vaccination,
         medical_history=request.medical_history,
+        notes=request.notes,
         current_user=current_user
     )
     

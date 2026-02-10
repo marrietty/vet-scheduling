@@ -20,6 +20,7 @@ class Pet(SQLModel, table=True):
         date_of_birth: Pet's date of birth (optional)
         last_vaccination: Date of last vaccination (optional)
         medical_history: JSON field storing medical records and notes
+        notes: Additional notes about the pet (optional)
         owner_id: Foreign key to the user who owns this pet
         created_at: Timestamp when the pet was registered
         updated_at: Timestamp when the pet was last updated
@@ -35,6 +36,7 @@ class Pet(SQLModel, table=True):
     date_of_birth: Optional[date] = Field(default=None)
     last_vaccination: Optional[datetime] = Field(default=None)
     medical_history: dict = Field(default={}, sa_column=Column(JSON))
+    notes: Optional[str] = Field(default=None)
     
     # Foreign key
     owner_id: uuid.UUID = Field(foreign_key="users.id", index=True, ondelete="CASCADE")

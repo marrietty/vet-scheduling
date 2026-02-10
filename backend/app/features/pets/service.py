@@ -45,7 +45,8 @@ class PetService:
         breed: Optional[str] = None,
         date_of_birth: Optional[date] = None,
         last_vaccination: Optional[datetime] = None,
-        medical_history: dict = None
+        medical_history: dict = None,
+        notes: Optional[str] = None
     ) -> Pet:
         """
         Create a new pet owned by the current user.
@@ -60,11 +61,12 @@ class PetService:
             date_of_birth: Pet's date of birth (optional)
             last_vaccination: Date of last vaccination (optional)
             medical_history: JSON object storing medical records (optional)
+            notes: Additional notes about the pet (optional)
         
         Returns:
             Created Pet object
         
-        Requirements: 3.1
+        Requirements: 3.1, 5.2
         """
         if medical_history is None:
             medical_history = {}
@@ -76,6 +78,7 @@ class PetService:
             date_of_birth=date_of_birth,
             last_vaccination=last_vaccination,
             medical_history=medical_history,
+            notes=notes,
             owner_id=current_user.id
         )
         
@@ -140,7 +143,8 @@ class PetService:
         breed: Optional[str] = None,
         date_of_birth: Optional[date] = None,
         last_vaccination: Optional[datetime] = None,
-        medical_history: Optional[dict] = None
+        medical_history: Optional[dict] = None,
+        notes: Optional[str] = None
     ) -> Pet:
         """
         Update a pet with ownership validation.
@@ -159,6 +163,7 @@ class PetService:
             date_of_birth: Pet's date of birth (optional)
             last_vaccination: Date of last vaccination (optional)
             medical_history: JSON object storing medical records (optional)
+            notes: Additional notes about the pet (optional)
         
         Returns:
             Updated Pet object
@@ -167,7 +172,7 @@ class PetService:
             NotFoundException: If pet doesn't exist
             ForbiddenException: If pet owner tries to update another user's pet
         
-        Requirements: 3.5, 3.7
+        Requirements: 3.5, 3.7, 5.3
         """
         # Get pet and validate ownership
         pet = self.get_pet_by_id(pet_id, current_user)
@@ -185,6 +190,8 @@ class PetService:
             pet.last_vaccination = last_vaccination
         if medical_history is not None:
             pet.medical_history = medical_history
+        if notes is not None:
+            pet.notes = notes
         
         return self.pet_repo.update(pet)
     

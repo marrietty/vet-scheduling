@@ -28,8 +28,9 @@ class PetCreateRequest(BaseModel):
         date_of_birth: Pet's date of birth (optional)
         last_vaccination: Date of last vaccination (optional)
         medical_history: JSON object storing medical records (default: empty dict)
+        notes: Additional notes about the pet (optional)
     
-    Requirements: 3.1
+    Requirements: 3.1, 5.2
     """
     name: str = Field(..., min_length=1, max_length=100, description="Pet's name")
     species: str = Field(..., min_length=1, max_length=50, description="Type of animal (e.g., dog, cat, bird)")
@@ -37,6 +38,7 @@ class PetCreateRequest(BaseModel):
     date_of_birth: Optional[date] = Field(None, description="Pet's date of birth")
     last_vaccination: Optional[datetime] = Field(None, description="Date of last vaccination")
     medical_history: dict = Field(default_factory=dict, description="JSON object storing medical records and notes")
+    notes: Optional[str] = Field(None, description="Additional notes about the pet")
 
 
 class PetUpdateRequest(BaseModel):
@@ -52,8 +54,9 @@ class PetUpdateRequest(BaseModel):
         date_of_birth: Pet's date of birth (optional)
         last_vaccination: Date of last vaccination (optional)
         medical_history: JSON object storing medical records (optional)
+        notes: Additional notes about the pet (optional)
     
-    Requirements: 3.1
+    Requirements: 3.1, 5.3
     """
     name: Optional[str] = Field(None, min_length=1, max_length=100, description="Pet's name")
     species: Optional[str] = Field(None, min_length=1, max_length=50, description="Type of animal")
@@ -61,6 +64,7 @@ class PetUpdateRequest(BaseModel):
     date_of_birth: Optional[date] = Field(None, description="Pet's date of birth")
     last_vaccination: Optional[datetime] = Field(None, description="Date of last vaccination")
     medical_history: Optional[dict] = Field(None, description="JSON object storing medical records and notes")
+    notes: Optional[str] = Field(None, description="Additional notes about the pet")
 
 
 class PetResponse(BaseModel):
@@ -82,11 +86,12 @@ class PetResponse(BaseModel):
         last_vaccination: Date of last vaccination (optional)
         vaccination_status: Computed vaccination status (valid, expired, unknown)
         medical_history: JSON object storing medical records
+        notes: Additional notes about the pet (optional)
         owner_id: ID of the user who owns this pet
         created_at: Timestamp when the pet was registered
         updated_at: Timestamp when the pet was last updated
     
-    Requirements: 3.4, 4.4
+    Requirements: 3.4, 4.4, 5.4
     """
     id: uuid.UUID
     name: str
@@ -96,6 +101,7 @@ class PetResponse(BaseModel):
     last_vaccination: Optional[datetime]
     vaccination_status: str = Field(..., description="Computed vaccination status: valid, expired, or unknown")
     medical_history: dict
+    notes: Optional[str]
     owner_id: uuid.UUID
     created_at: datetime
     updated_at: datetime
@@ -118,7 +124,7 @@ class PetResponse(BaseModel):
         Returns:
             PetResponse with computed vaccination_status
         
-        Requirements: 4.4
+        Requirements: 4.4, 5.4
         """
         return cls(
             id=pet.id,
@@ -129,6 +135,7 @@ class PetResponse(BaseModel):
             last_vaccination=pet.last_vaccination,
             vaccination_status=get_vaccination_status(pet.last_vaccination),
             medical_history=pet.medical_history,
+            notes=pet.notes,
             owner_id=pet.owner_id,
             created_at=pet.created_at,
             updated_at=pet.updated_at
