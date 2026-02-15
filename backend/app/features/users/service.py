@@ -13,7 +13,8 @@ from typing import Optional
 import uuid
 from app.features.users.repository import UserRepository
 from app.features.users.schemas import UserProfileResponse, UserProfileUpdate
-from app.common.exceptions import NotFoundException, BadRequestException
+from app.common.exceptions import NotFoundException, BadRequestException, UnauthorizedException
+from app.infrastructure.auth import verify_password
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -149,3 +150,41 @@ class UserService:
         logger.debug(f"Updated fields: {list(update_dict.keys())}")
         
         return updated_profile
+
+    def delete_account(self, user_id: uuid.UUID, password: str) -> None:
+        """
+        Permanently delete a user account after password verification.
+        
+        This method:
+        1. Fetches the user (raises NotFoundException if missing)
+        2. Verifies the provided password against the stored hash
+        3. Deletes the user (cascade deletes pets and appointments)
+        
+        Args:
+            user_id: UUID of the user to delete
+            password: User's current password for verification
+            
+        Raises:
+            NotFoundException: If user is not found
+            UnauthorizedException: If password verification fails
+        """
+        logger.info(f"Account deletion requested for user: {user_id}")
+        
+        # Fetch user to get hashed password
+        user = self.user_repo.get_by_id(user_id)
+        if not user:
+            logger.warning(f"Account deletion failed: User not found - {user_id}")
+            raise NotFoundException("User")
+        
+        # Verify password
+        if not verify_password(password, user.hashed_password):
+            logger.warning(f"Account deletion failed: Invalid password for user {user_id}")
+            raise UnauthorizedException("Invalid password")
+        
+        # Delete user (cascades to pets and appointments)
+        deleted = self.user_repo.delete_user(user_id)
+        if not deleted:
+            logger.error(f"Account deletion failed: User disappeared during delete - {user_id}")
+            raise NotFoundException("User")
+        
+        logger.info(f"Account permanently deleted for user: {user_id}")

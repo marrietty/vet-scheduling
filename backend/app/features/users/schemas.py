@@ -124,3 +124,17 @@ class UserProfileUpdate(BaseModel):
             if not v.strip():
                 raise ValueError('City cannot be empty or whitespace only')
         return v
+
+
+class DeleteAccountRequest(BaseModel):
+    """
+    Request schema for account deletion.
+    
+    Requires the user's current password for security verification
+    before permanently deleting the account.
+    """
+    password: str = Field(
+        ...,
+        min_length=1,
+        description="User's current password for verification"
+    )

@@ -2,10 +2,13 @@
  * User Profile Page
  */
 
-import { useRouter } from '@tanstack/react-router';
+import { useState } from 'react';
+import { useRouter, useNavigate } from '@tanstack/react-router';
 import { Card } from '../components/ui/Card';
 import { ProfileForm } from '../components/profile/ProfileForm';
 import { useUserProfile } from '../hooks/useUsers';
+import { useAuthActions } from '../hooks/useAuth';
+import { apiClient } from '../lib/api-client';
 import { format } from 'date-fns';
 import type { UserProfileResponse } from '../types';
 
@@ -15,11 +18,46 @@ interface ProfilePageProps {
 
 export function ProfilePage({ profile }: ProfilePageProps) {
   const router = useRouter();
+  const navigate = useNavigate();
   const { updateProfile, error } = useUserProfile();
+  const { logout } = useAuthActions();
+
+  // Delete account state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleUpdate = async (data: any) => {
     await updateProfile(data);
     router.invalidate();
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!deletePassword.trim()) return;
+
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    try {
+      await apiClient.post('/api/v1/users/profile/delete', {
+        password: deletePassword,
+      });
+
+      // Account deleted — log out and go home
+      await logout();
+      navigate({ to: '/' });
+    } catch (err: any) {
+      setDeleteError(err.message || 'Failed to delete account. Please check your password.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const closeDeleteModal = () => {
+    setShowDeleteModal(false);
+    setDeletePassword('');
+    setDeleteError(null);
   };
 
   return (
@@ -82,6 +120,68 @@ export function ProfilePage({ profile }: ProfilePageProps) {
           )}
         </div>
       </div>
+
+      {/* Danger Zone */}
+      <div className="danger-zone">
+        <h2 className="danger-zone-title">Danger Zone</h2>
+        <p className="danger-zone-description">
+          Deleting your account will permanently remove all your pet profiles, medical history, and upcoming appointments.
+        </p>
+        <button
+          className="danger-zone-btn"
+          onClick={() => setShowDeleteModal(true)}
+        >
+          Delete My Account
+        </button>
+      </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="modal-overlay" onClick={closeDeleteModal}>
+          <div className="modal-content danger-modal" onClick={(e) => e.stopPropagation()}>
+            <h2 className="danger-modal-header">Are you absolutely sure?</h2>
+            <p className="danger-modal-warning">
+              This action is irreversible. All data related to your pets and scheduled appointments will be lost.
+            </p>
+
+            <div className="danger-modal-field">
+              <label htmlFor="delete-password" className="danger-modal-label">
+                Please enter your password to confirm
+              </label>
+              <input
+                id="delete-password"
+                type="password"
+                className="danger-modal-input"
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                placeholder="Enter your password"
+                autoFocus
+              />
+            </div>
+
+            {deleteError && (
+              <p className="danger-modal-error">{deleteError}</p>
+            )}
+
+            <div className="danger-modal-actions">
+              <button
+                className="danger-modal-cancel"
+                onClick={closeDeleteModal}
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                className="danger-modal-confirm"
+                onClick={handleDeleteAccount}
+                disabled={!deletePassword.trim() || isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Confirm Permanent Deletion'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

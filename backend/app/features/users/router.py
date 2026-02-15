@@ -4,13 +4,14 @@ User router for profile management endpoints.
 This module provides HTTP endpoints for:
 - GET /api/v1/users/profile: Get current user's profile information
 - PATCH /api/v1/users/profile: Update current user's profile information
+- POST /api/v1/users/profile/delete: Permanently delete current user's account
 """
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Response, status
 from sqlmodel import Session
 
 from app.core.database import get_session
-from app.features.users.schemas import UserProfileResponse, UserProfileUpdate
+from app.features.users.schemas import UserProfileResponse, UserProfileUpdate, DeleteAccountRequest
 from app.features.users.service import UserService
 from app.features.users.repository import UserRepository
 from app.common.dependencies import get_current_user
@@ -263,3 +264,33 @@ def update_profile(
     updated_profile = user_service.update_user_profile(current_user.id, updates)
     
     return updated_profile
+
+
+@router.post("/profile/delete", status_code=status.HTTP_204_NO_CONTENT)
+def delete_account(
+    request: DeleteAccountRequest,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+) -> Response:
+    """
+    Permanently delete the current user's account.
+    
+    Requires the user's current password for security verification.
+    On success, the user record and all associated data (pets, appointments)
+    are permanently deleted via cascade.
+    
+    **Request Body:**
+    ```json
+    {"password": "current_password"}
+    ```
+    
+    **Error Responses:**
+    - **401 Unauthorized**: Invalid password or invalid/missing token
+    - **404 Not Found**: User not found
+    """
+    user_repo = UserRepository(session)
+    user_service = UserService(user_repo)
+    
+    user_service.delete_account(current_user.id, request.password)
+    
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

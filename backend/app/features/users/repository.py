@@ -106,3 +106,23 @@ class UserRepository:
         statement = select(User).where(User.email == email, User.id != user_id)
         existing_user = self.session.exec(statement).first()
         return existing_user is not None
+
+    def delete_user(self, user_id: uuid.UUID) -> bool:
+        """Delete a user permanently from the database.
+        
+        Cascade deletion of pets and appointments is handled by
+        the SQLModel relationship configuration (cascade_delete=True).
+        
+        Args:
+            user_id: UUID of the user to delete
+            
+        Returns:
+            True if user was deleted, False if not found
+        """
+        user = self.session.get(User, user_id)
+        if user is None:
+            return False
+        
+        self.session.delete(user)
+        self.session.flush()
+        return True
