@@ -27,6 +27,12 @@ export function PetForm({ pet, onSubmit, onCancel, isLoading, error }: PetFormPr
     last_vaccination: pet?.last_vaccination || '',
   });
 
+  const [dobError, setDobError] = useState<string | null>(null);
+  const [vaccinationError, setVaccinationError] = useState<string | null>(null);
+
+  // Today's date for max attribute
+  const today = new Date().toISOString().split('T')[0];
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -81,14 +87,36 @@ export function PetForm({ pet, onSubmit, onCancel, isLoading, error }: PetFormPr
         label="Date of Birth"
         type="date"
         value={formData.date_of_birth}
-        onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })}
+        onChange={(e) => {
+          const val = e.target.value;
+          if (val && val > today) {
+            setDobError('Date cannot be in the future.');
+            setFormData({ ...formData, date_of_birth: '' });
+          } else {
+            setDobError(null);
+            setFormData({ ...formData, date_of_birth: val });
+          }
+        }}
+        max={today}
+        error={dobError || undefined}
       />
 
       <Input
         label="Last Vaccination"
         type="date"
         value={formData.last_vaccination}
-        onChange={(e) => setFormData({ ...formData, last_vaccination: e.target.value })}
+        onChange={(e) => {
+          const val = e.target.value;
+          if (val && val > today) {
+            setVaccinationError('Date cannot be in the future.');
+            setFormData({ ...formData, last_vaccination: '' });
+          } else {
+            setVaccinationError(null);
+            setFormData({ ...formData, last_vaccination: val });
+          }
+        }}
+        max={today}
+        error={vaccinationError || undefined}
       />
 
       <div className="input-group">
