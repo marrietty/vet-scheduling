@@ -5,6 +5,7 @@
 import { Link } from '@tanstack/react-router';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../contexts/AuthContext';
+import { LandingFooter } from '../layouts/LandingFooter';
 
 export function HomePage() {
   const { isAuthenticated } = useAuth();
@@ -132,6 +133,8 @@ export function HomePage() {
           </div>
         </div>
       </main>
+
+      <LandingFooter />
     </div>
   );
 }
