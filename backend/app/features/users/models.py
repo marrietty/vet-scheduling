@@ -6,7 +6,7 @@ from typing import Optional, List, Dict, Any, TYPE_CHECKING
 import uuid
 
 if TYPE_CHECKING:
-    from backend.app.features.pets.models import Pet
+    from app.features.pets.models import Pet
 
 
 class User(SQLModel, table=True):
