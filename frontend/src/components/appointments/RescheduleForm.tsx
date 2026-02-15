@@ -2,11 +2,12 @@
  * Reschedule Appointment Form Component
  */
 
-import { useState, FormEvent } from 'react';
+import { useState } from 'react';
+import type { FormEvent } from 'react';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { Alert } from '../ui/Alert';
-import { Appointment, AppointmentRescheduleRequest } from '../../types';
+import type { Appointment, AppointmentRescheduleRequest } from '../../types';
 import { format } from 'date-fns';
 
 interface RescheduleFormProps {
@@ -25,7 +26,7 @@ export function RescheduleForm({ appointment, onSubmit, onCancel, isLoading, err
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    
+
     await onSubmit({
       start_time: new Date(formData.start_time).toISOString(),
       end_time: new Date(formData.end_time).toISOString(),

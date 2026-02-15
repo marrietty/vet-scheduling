@@ -7,7 +7,7 @@
 import { useState } from 'react';
 import { apiClient } from '../lib/api-client';
 import { useAuth as useAuthContext } from '../contexts/AuthContext';
-import {
+import type {
   LoginRequest,
   RegisterRequest,
   TokenResponse,
@@ -34,13 +34,13 @@ export function useAuthActions() {
     try {
       // POST /api/v1/auth/register
       const response = await apiClient.post<TokenResponse>('/api/v1/auth/register', data);
-      
+
       // Decode JWT to get user info
       const decoded = jwtDecode<JWTPayload>(response.access_token);
-      
+
       // Fetch full user profile
       const userProfile = await apiClient.get<UserProfileResponse>('/api/v1/users/profile');
-      
+
       setAuth(response.access_token, {
         id: decoded.sub,
         email: data.email,
@@ -69,16 +69,16 @@ export function useAuthActions() {
     try {
       // POST /api/v1/auth/login
       const response = await apiClient.post<TokenResponse>('/api/v1/auth/login', data);
-      
+
       // Store token temporarily to fetch profile
       localStorage.setItem('access_token', response.access_token);
-      
+
       // Decode JWT to get user info
       const decoded = jwtDecode<JWTPayload>(response.access_token);
-      
+
       // Fetch full user profile
       const userProfile = await apiClient.get<UserProfileResponse>('/api/v1/users/profile');
-      
+
       setAuth(response.access_token, {
         id: decoded.sub,
         email: userProfile.email,

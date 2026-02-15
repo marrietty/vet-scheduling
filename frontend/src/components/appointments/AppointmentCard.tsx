@@ -2,7 +2,7 @@
  * Appointment Card Component
  */
 
-import { Appointment } from '../../types';
+import type { Appointment } from '../../types';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { format } from 'date-fns';

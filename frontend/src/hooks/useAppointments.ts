@@ -6,7 +6,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { apiClient } from '../lib/api-client';
-import {
+import type {
   Appointment,
   AppointmentCreateRequest,
   AppointmentUpdateStatusRequest,
@@ -14,7 +14,12 @@ import {
   AppointmentFilters,
 } from '../types';
 
-export function useAppointments(filters?: AppointmentFilters) {
+export interface TimeSlot {
+  start_time: string;
+  end_time: string;
+}
+
+export function useAppointments(filters?: AppointmentFilters, options = { enabled: true }) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +47,18 @@ export function useAppointments(filters?: AppointmentFilters) {
       setIsLoading(false);
     }
   }, [filters]);
+
+  const fetchAvailableSlots = useCallback(async (date: string, serviceType: string, signal?: AbortSignal): Promise<TimeSlot[]> => {
+    try {
+      const data = await apiClient.get<TimeSlot[]>('/api/v1/appointments/available-slots', {
+        date,
+        service_type: serviceType,
+      }, signal);
+      return data;
+    } catch (err: any) {
+      throw err;
+    }
+  }, []);
 
   const createAppointment = useCallback(async (appointmentData: AppointmentCreateRequest) => {
     setIsLoading(true);
@@ -128,12 +145,15 @@ export function useAppointments(filters?: AppointmentFilters) {
 
   // Auto-fetch appointments on mount or when filters change
   useEffect(() => {
-    fetchAppointments();
-  }, [fetchAppointments]);
+    if (options.enabled) {
+      fetchAppointments();
+    }
+  }, [fetchAppointments, options.enabled]);
 
   return {
     appointments,
     fetchAppointments,
+    fetchAvailableSlots,
     createAppointment,
     updateAppointmentStatus,
     rescheduleAppointment,

@@ -2,7 +2,7 @@
  * Dashboard Layout Component
  */
 
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Navbar } from './Navbar';
 
 interface DashboardLayoutProps {

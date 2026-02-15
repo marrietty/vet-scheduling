@@ -6,9 +6,9 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { apiClient } from '../lib/api-client';
-import { Pet, PetCreateRequest, PetUpdateRequest } from '../types';
+import type { Pet, PetCreateRequest, PetUpdateRequest } from '../types';
 
-export function usePets() {
+export function usePets(enabled = true) {
   const [pets, setPets] = useState<Pet[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -98,8 +98,10 @@ export function usePets() {
 
   // Auto-fetch pets on mount
   useEffect(() => {
-    fetchPets();
-  }, [fetchPets]);
+    if (enabled) {
+      fetchPets();
+    }
+  }, [fetchPets, enabled]);
 
   return {
     pets,

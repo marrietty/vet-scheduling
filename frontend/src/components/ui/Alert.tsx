@@ -2,16 +2,18 @@
  * Reusable Alert Component
  */
 
-import { ReactNode } from 'react';
+import type { ReactNode, CSSProperties } from 'react';
 
 interface AlertProps {
   type?: 'info' | 'success' | 'warning' | 'error';
   title?: string;
   children: ReactNode;
   onClose?: () => void;
+  className?: string;
+  style?: CSSProperties;
 }
 
-export function Alert({ type = 'info', title, children, onClose }: AlertProps) {
+export function Alert({ type = 'info', title, children, onClose, className = '', style }: AlertProps) {
   const icons = {
     info: (
       <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
@@ -36,7 +38,7 @@ export function Alert({ type = 'info', title, children, onClose }: AlertProps) {
   };
 
   return (
-    <div className={`alert alert-${type}`}>
+    <div className={`alert alert-${type} ${className}`} style={style}>
       <div style={{ flexShrink: 0 }}>{icons[type]}</div>
       <div style={{ flex: 1 }}>
         {title && <h3 className="text-sm font-semibold mb-1">{title}</h3>}

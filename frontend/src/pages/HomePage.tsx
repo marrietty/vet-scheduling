@@ -2,7 +2,7 @@
  * Home/Landing Page
  */
 
-import { Link } from 'react-router-dom';
+import { Link } from '@tanstack/react-router';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -64,13 +64,13 @@ export function HomePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" style={{ marginTop: '5rem' }}>
           <div className="card">
             <div className="card-body">
-              <div style={{ 
-                width: '3rem', 
-                height: '3rem', 
-                backgroundColor: '#dbeafe', 
-                borderRadius: 'var(--radius-lg)', 
-                display: 'flex', 
-                alignItems: 'center', 
+              <div style={{
+                width: '3rem',
+                height: '3rem',
+                backgroundColor: '#dbeafe',
+                borderRadius: 'var(--radius-lg)',
+                display: 'flex',
+                alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: '1rem'
               }}>
@@ -87,13 +87,13 @@ export function HomePage() {
 
           <div className="card">
             <div className="card-body">
-              <div style={{ 
-                width: '3rem', 
-                height: '3rem', 
-                backgroundColor: '#dcfce7', 
-                borderRadius: 'var(--radius-lg)', 
-                display: 'flex', 
-                alignItems: 'center', 
+              <div style={{
+                width: '3rem',
+                height: '3rem',
+                backgroundColor: '#dcfce7',
+                borderRadius: 'var(--radius-lg)',
+                display: 'flex',
+                alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: '1rem'
               }}>
@@ -110,13 +110,13 @@ export function HomePage() {
 
           <div className="card">
             <div className="card-body">
-              <div style={{ 
-                width: '3rem', 
-                height: '3rem', 
-                backgroundColor: '#f3e8ff', 
-                borderRadius: 'var(--radius-lg)', 
-                display: 'flex', 
-                alignItems: 'center', 
+              <div style={{
+                width: '3rem',
+                height: '3rem',
+                backgroundColor: '#f3e8ff',
+                borderRadius: 'var(--radius-lg)',
+                display: 'flex',
+                alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: '1rem'
               }}>

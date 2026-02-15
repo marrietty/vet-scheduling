@@ -2,7 +2,8 @@
  * Reusable Select Component
  */
 
-import { SelectHTMLAttributes, forwardRef } from 'react';
+import { forwardRef } from 'react';
+import type { SelectHTMLAttributes } from 'react';
 
 interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;

@@ -33,11 +33,25 @@ export class ApiClient {
         timestamp: new Date().toISOString(),
       }));
 
-      throw {
-        message: error.detail || 'An error occurred',
-        status: response.status,
-        errors: error.detail,
-      };
+      // FastAPI 422 returns detail as an array of validation errors
+      let message = 'An error occurred';
+      if (typeof error.detail === 'string') {
+        message = error.detail;
+      } else if (Array.isArray(error.detail)) {
+        // Extract readable messages from FastAPI validation error format
+        // Each item has { loc: [...], msg: string, type: string }
+        message = error.detail
+          .map((err: any) => {
+            const field = err.loc?.slice(-1)[0] || 'field';
+            return `${field}: ${err.msg}`;
+          })
+          .join('; ');
+      }
+
+      const apiError = new Error(message);
+      (apiError as any).status = response.status;
+      (apiError as any).errors = error.detail;
+      throw apiError;
     }
 
     // Handle 204 No Content
@@ -48,7 +62,7 @@ export class ApiClient {
     return response.json();
   }
 
-  async get<T>(endpoint: string, params?: Record<string, string>): Promise<T> {
+  async get<T>(endpoint: string, params?: Record<string, string>, signal?: AbortSignal): Promise<T> {
     const url = new URL(`${this.baseURL}${endpoint}`);
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
@@ -61,6 +75,7 @@ export class ApiClient {
     const response = await fetch(url.toString(), {
       method: 'GET',
       headers: this.getAuthHeaders(),
+      signal,
     });
 
     return this.handleResponse<T>(response);

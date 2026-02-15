@@ -7,7 +7,7 @@
 import { useState, useCallback } from 'react';
 import { apiClient } from '../lib/api-client';
 import { useAuth } from '../contexts/AuthContext';
-import { UserProfileResponse, UserProfileUpdate } from '../types';
+import type { UserProfileResponse, UserProfileUpdate } from '../types';
 
 export function useUserProfile() {
   const { updateUser } = useAuth();
@@ -23,7 +23,7 @@ export function useUserProfile() {
       // GET /api/v1/users/profile
       const data = await apiClient.get<UserProfileResponse>('/api/v1/users/profile');
       setProfile(data);
-      
+
       // Update auth context with latest profile
       updateUser({
         id: data.id,
@@ -36,7 +36,7 @@ export function useUserProfile() {
         preferences: data.preferences,
         created_at: data.created_at,
       });
-      
+
       return data;
     } catch (err: any) {
       setError(err.message || 'Failed to fetch profile');
@@ -54,7 +54,7 @@ export function useUserProfile() {
       // PATCH /api/v1/users/profile
       const data = await apiClient.patch<UserProfileResponse>('/api/v1/users/profile', updates);
       setProfile(data);
-      
+
       // Update auth context with latest profile
       updateUser({
         id: data.id,
@@ -67,7 +67,7 @@ export function useUserProfile() {
         preferences: data.preferences,
         created_at: data.created_at,
       });
-      
+
       return data;
     } catch (err: any) {
       setError(err.message || 'Failed to update profile');

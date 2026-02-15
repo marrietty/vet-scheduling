@@ -2,7 +2,7 @@
  * Pet Card Component
  */
 
-import { Pet } from '../../types';
+import type { Pet } from '../../types';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { format } from 'date-fns';
@@ -16,10 +16,10 @@ interface PetCardProps {
 export function PetCard({ pet, onEdit, onDelete }: PetCardProps) {
   const getVaccinationStatus = () => {
     if (!pet.last_vaccination) return { status: 'Unknown' };
-    
+
     const lastVaccination = new Date(pet.last_vaccination);
     const daysSince = Math.floor((Date.now() - lastVaccination.getTime()) / (1000 * 60 * 60 * 24));
-    
+
     if (daysSince <= 365) {
       return { status: 'Valid' };
     } else {
@@ -64,11 +64,11 @@ export function PetCard({ pet, onEdit, onDelete }: PetCardProps) {
           )}
           <div>
             <span className="font-medium text-gray-700">Vaccination:</span>
-            <span className="font-medium" style={{ 
+            <span className="font-medium" style={{
               marginLeft: '0.5rem',
-              color: vaccination.status === 'Valid' ? 'var(--color-success)' : 
-                     vaccination.status === 'Expired' ? 'var(--color-danger)' : 
-                     'var(--color-gray-600)'
+              color: vaccination.status === 'Valid' ? 'var(--color-success)' :
+                vaccination.status === 'Expired' ? 'var(--color-danger)' :
+                  'var(--color-gray-600)'
             }}>
               {vaccination.status}
             </span>

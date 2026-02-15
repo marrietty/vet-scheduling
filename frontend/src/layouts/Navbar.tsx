@@ -1,21 +1,22 @@
 /**
  * Navigation Bar Component
+ * Uses TanStack Router's Link with preload="intent" for hover-preloading.
  */
 
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { useAuthActions } from '../hooks/useAuth';
-import { Button } from '../components/ui/Button';
+import { Link, useNavigate } from '@tanstack/react-router'
+import { useAuth } from '../contexts/AuthContext'
+import { useAuthActions } from '../hooks/useAuth'
+import { Button } from '../components/ui/Button'
 
 export function Navbar() {
-  const { user, isAuthenticated } = useAuth();
-  const { logout } = useAuthActions();
-  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth()
+  const { logout } = useAuthActions()
+  const navigate = useNavigate()
 
   const handleLogout = async () => {
-    await logout();
-    navigate('/login');
-  };
+    await logout()
+    navigate({ to: '/login' })
+  }
 
   return (
     <nav className="navbar">
@@ -30,13 +31,33 @@ export function Navbar() {
         <ul className="navbar-nav">
           {isAuthenticated ? (
             <>
-              <li><Link to="/dashboard" className="navbar-link">Dashboard</Link></li>
-              <li><Link to="/pets" className="navbar-link">My Pets</Link></li>
-              <li><Link to="/appointments" className="navbar-link">Appointments</Link></li>
+              <li>
+                <Link to="/dashboard" className="navbar-link" preload="intent">
+                  Dashboard
+                </Link>
+              </li>
+              <li>
+                <Link to="/pets" className="navbar-link" preload="intent">
+                  My Pets
+                </Link>
+              </li>
+              <li>
+                <Link to="/appointments" className="navbar-link" preload="intent">
+                  Appointments
+                </Link>
+              </li>
               {user?.role === 'admin' && (
-                <li><Link to="/admin" className="navbar-link">Admin</Link></li>
+                <li>
+                  <Link to="/admin" className="navbar-link" preload="intent">
+                    Admin
+                  </Link>
+                </li>
               )}
-              <li><Link to="/profile" className="navbar-link">Profile</Link></li>
+              <li>
+                <Link to="/profile" className="navbar-link" preload="intent">
+                  Profile
+                </Link>
+              </li>
               <li>
                 <Button size="sm" variant="secondary" onClick={handleLogout}>
                   Logout
@@ -60,5 +81,5 @@ export function Navbar() {
         </ul>
       </div>
     </nav>
-  );
+  )
 }

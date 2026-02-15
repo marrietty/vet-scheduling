@@ -2,11 +2,12 @@
  * Pet Form Component (Create/Edit)
  */
 
-import { useState, FormEvent, useEffect } from 'react';
-import { Input } from '../ui/Input';
+import { useState } from 'react';
+import type { FormEvent } from 'react';
 import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
 import { Alert } from '../ui/Alert';
-import { Pet, PetCreateRequest, PetUpdateRequest } from '../../types';
+import type { Pet, PetCreateRequest, PetUpdateRequest } from '../../types';
 
 interface PetFormProps {
   pet?: Pet;
@@ -28,7 +29,7 @@ export function PetForm({ pet, onSubmit, onCancel, isLoading, error }: PetFormPr
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    
+
     const data: any = {
       name: formData.name,
       species: formData.species,

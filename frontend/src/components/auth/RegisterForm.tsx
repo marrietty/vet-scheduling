@@ -2,8 +2,9 @@
  * Register Form Component
  */
 
-import { useState, FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import type { FormEvent } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { Alert } from '../ui/Alert';
@@ -41,7 +42,7 @@ export function RegisterForm() {
         password: formData.password,
         full_name: formData.full_name,
       });
-      navigate('/dashboard');
+      navigate({ to: '/dashboard' });
     } catch (err) {
       // Error is handled by the hook
     }

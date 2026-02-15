@@ -6,7 +6,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { apiClient } from '../lib/api-client';
-import { ClinicStatus, ClinicStatusUpdateRequest } from '../types';
+import type { ClinicStatus, ClinicStatusUpdateRequest } from '../types';
 
 export function useClinicStatus() {
   const [status, setStatus] = useState<ClinicStatus | null>(null);
