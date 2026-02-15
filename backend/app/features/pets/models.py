@@ -4,6 +4,8 @@ from datetime import datetime, date
 from typing import Optional, List, TYPE_CHECKING
 import uuid
 
+from app.common.utils import get_pht_now
+
 if TYPE_CHECKING:
     from app.features.users.models import User
     from app.features.appointments.models import Appointment
@@ -42,8 +44,8 @@ class Pet(SQLModel, table=True):
     owner_id: uuid.UUID = Field(foreign_key="users.id", index=True, ondelete="CASCADE")
     
     # Timestamps
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=get_pht_now)
+    updated_at: datetime = Field(default_factory=get_pht_now)
     
     # Relationships
     owner: "User" = Relationship(back_populates="pets")

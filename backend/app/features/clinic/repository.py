@@ -3,6 +3,7 @@ from sqlmodel import Session
 from datetime import datetime
 
 from app.features.clinic.models import ClinicStatus
+from app.common.utils import get_pht_now
 
 
 class ClinicStatusRepository:
@@ -60,7 +61,7 @@ class ClinicStatusRepository:
         """
         status = self.get_current_status()
         status.status = new_status
-        status.updated_at = datetime.utcnow()
+        status.updated_at = get_pht_now()
         self.session.add(status)
         self.session.flush()
         self.session.refresh(status)

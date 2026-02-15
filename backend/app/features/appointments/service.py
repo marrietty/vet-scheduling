@@ -1,5 +1,5 @@
 """Appointment service for business logic."""
-from datetime import datetime, timezone, date, time, timedelta
+from datetime import datetime, date, time, timedelta
 from typing import List, Optional
 import uuid
 
@@ -14,7 +14,7 @@ from app.common.exceptions import (
     ForbiddenException,
     BadRequestException
 )
-from app.common.utils import calculate_end_time, SERVICE_DURATIONS
+from app.common.utils import calculate_end_time, SERVICE_DURATIONS, get_pht_now
 
 # Clinic operating hours
 CLINIC_OPEN_HOUR = 8   # 8:00 AM
@@ -97,7 +97,7 @@ class AppointmentService:
             raise ForbiddenException("You can only book for your own pets")
         
         # 2. Validate time is in future (Requirement 5.4)
-        if start_time <= datetime.now(timezone.utc):
+        if start_time <= get_pht_now():
             raise BadRequestException("Appointment time must be in the future")
         
         # 3. Validate appointment is within clinic hours (8am-8pm)
@@ -364,21 +364,21 @@ class AppointmentService:
             raise BadRequestException("Clinic is closed")
         
         # Check date is not in the past
-        today = datetime.now(timezone.utc).date()
+        today = get_pht_now().date()
         if target_date < today:
             raise BadRequestException("Cannot view slots for past dates")
         
         # Get service duration
         duration_minutes = SERVICE_DURATIONS.get(service_type, 30)
         
-        # Define day boundaries
+        # Define day boundaries (naive PHT datetimes)
         day_start = datetime(
             target_date.year, target_date.month, target_date.day,
-            CLINIC_OPEN_HOUR, 0, tzinfo=timezone.utc
+            CLINIC_OPEN_HOUR, 0
         )
         clinic_close = datetime(
             target_date.year, target_date.month, target_date.day,
-            CLINIC_CLOSE_HOUR, 0, tzinfo=timezone.utc
+            CLINIC_CLOSE_HOUR, 0
         )
         
         # Fetch ALL existing appointments for this day in ONE query
@@ -394,7 +394,7 @@ class AppointmentService:
             return False
         
         # Generate all possible slots from 8am to 8pm
-        now = datetime.now(timezone.utc)
+        now = get_pht_now()
         slots = []
         current_start = day_start
         

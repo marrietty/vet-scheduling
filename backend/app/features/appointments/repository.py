@@ -6,6 +6,7 @@ import uuid
 
 from app.features.appointments.models import Appointment
 from app.features.pets.models import Pet
+from app.common.utils import get_pht_now
 
 
 class AppointmentRepository:
@@ -180,7 +181,7 @@ class AppointmentRepository:
         Returns:
             Updated Appointment object
         """
-        appointment.updated_at = datetime.utcnow()
+        appointment.updated_at = get_pht_now()
         self.session.add(appointment)
         self.session.flush()
         self.session.refresh(appointment)
@@ -262,7 +263,7 @@ class AppointmentRepository:
         
         appointment.start_time = start_time
         appointment.end_time = end_time
-        appointment.updated_at = datetime.utcnow()
+        appointment.updated_at = get_pht_now()
         
         self.session.add(appointment)
         self.session.flush()

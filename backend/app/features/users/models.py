@@ -5,6 +5,8 @@ from datetime import datetime
 from typing import Optional, List, Dict, Any, TYPE_CHECKING
 import uuid
 
+from app.common.utils import get_pht_now
+
 if TYPE_CHECKING:
     from app.features.pets.models import Pet
 
@@ -35,7 +37,7 @@ class User(SQLModel, table=True):
     city: Optional[str] = Field(default=None, max_length=100, nullable=True)
     preferences: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON, nullable=True))
     is_active: bool = Field(default=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=get_pht_now)
     
     # Relationships
     pets: List["Pet"] = Relationship(back_populates="owner", cascade_delete=True)

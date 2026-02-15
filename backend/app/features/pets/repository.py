@@ -5,6 +5,7 @@ from datetime import datetime
 import uuid
 
 from app.features.pets.models import Pet
+from app.common.utils import get_pht_now
 
 
 class PetRepository:
@@ -77,7 +78,7 @@ class PetRepository:
         Returns:
             Updated Pet object
         """
-        pet.updated_at = datetime.utcnow()
+        pet.updated_at = get_pht_now()
         self.session.add(pet)
         self.session.flush()
         self.session.refresh(pet)

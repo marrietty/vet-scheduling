@@ -2,6 +2,8 @@
 from sqlmodel import SQLModel, Field
 from datetime import datetime
 
+from app.common.utils import get_pht_now
+
 
 class ClinicStatus(SQLModel, table=True):
     """ClinicStatus model representing the operational status of the clinic.
@@ -18,4 +20,4 @@ class ClinicStatus(SQLModel, table=True):
     
     id: int = Field(default=1, primary_key=True)
     status: str = Field(max_length=20, default="open")
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=get_pht_now)

@@ -4,6 +4,8 @@ from datetime import datetime
 from typing import Optional
 import uuid
 
+from app.common.utils import get_pht_now
+
 
 class TokenBlacklist(SQLModel, table=True):
     """Token blacklist model for invalidated JWT tokens.
@@ -28,7 +30,7 @@ class TokenBlacklist(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     token: str = Field(unique=True, index=True, nullable=False)
     expires_at: datetime = Field(nullable=False, index=True)
-    blacklisted_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    blacklisted_at: datetime = Field(default_factory=get_pht_now, nullable=False)
     
     # Foreign key
     user_id: uuid.UUID = Field(foreign_key="users.id", index=True, nullable=False)

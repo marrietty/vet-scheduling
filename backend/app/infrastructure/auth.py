@@ -6,6 +6,7 @@ import bcrypt
 from jose import JWTError, jwt
 from app.core import config
 from app.common.exceptions import UnauthorizedException, BadRequestException
+from app.common.utils import get_pht_now
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -155,7 +156,7 @@ def create_access_token(data: Dict[str, Any]) -> str:
     """
     try:
         to_encode = data.copy()
-        expire = datetime.utcnow() + timedelta(minutes=config.JWT_EXPIRE_MINUTES)
+        expire = get_pht_now() + timedelta(minutes=config.JWT_EXPIRE_MINUTES)
         to_encode.update({"exp": expire})
         
         logger.debug(f"Creating JWT token for user: {data.get('sub')}")

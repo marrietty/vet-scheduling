@@ -4,12 +4,31 @@ Utility functions for the Vet Clinic Scheduling System.
 This module provides helper functions for common operations including:
 - Service duration calculations
 - Vaccination status computation
+- Philippine timezone utilities
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from app.common.enums import VaccinationStatus
+
+
+# Philippine Standard Time (UTC+8)
+PHT = timezone(timedelta(hours=8))
+
+
+def get_pht_now() -> datetime:
+    """
+    Return the current date and time in Philippine Standard Time (UTC+8).
+    
+    Returns a naive datetime (no tzinfo) representing the current wall-clock
+    time in the Philippines. This is used for all timestamps in the system
+    so that stored values correspond to PHT.
+    
+    Returns:
+        A naive datetime representing the current PHT time.
+    """
+    return datetime.now(PHT).replace(tzinfo=None)
 
 
 # Service duration constants (in minutes)
@@ -66,12 +85,11 @@ def get_vaccination_status(last_vaccination: Optional[datetime]) -> str:
     if not last_vaccination:
         return VaccinationStatus.UNKNOWN.value
     
-    # Use timezone-aware datetime for comparison
-    # If last_vaccination is naive (no timezone), treat it as UTC
-    now = datetime.utcnow()
+    now = get_pht_now()
     one_year_ago = now - timedelta(days=365)
     
     if last_vaccination < one_year_ago:
         return VaccinationStatus.EXPIRED.value
     else:
         return VaccinationStatus.VALID.value
+

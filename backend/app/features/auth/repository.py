@@ -5,6 +5,7 @@ from typing import Optional
 import uuid
 
 from app.features.auth.models import TokenBlacklist
+from app.common.utils import get_pht_now
 
 
 class TokenBlacklistRepository:
@@ -75,7 +76,7 @@ class TokenBlacklistRepository:
         """
         statement = select(TokenBlacklist).where(
             TokenBlacklist.token == token,
-            TokenBlacklist.expires_at > datetime.utcnow()
+            TokenBlacklist.expires_at > get_pht_now()
         )
         result = self.session.exec(statement).first()
         return result is not None
@@ -95,7 +96,7 @@ class TokenBlacklistRepository:
         """
         # Find all expired tokens
         statement = select(TokenBlacklist).where(
-            TokenBlacklist.expires_at < datetime.utcnow()
+            TokenBlacklist.expires_at < get_pht_now()
         )
         expired_tokens = self.session.exec(statement).all()
         
