@@ -33,9 +33,46 @@ from app.features.appointments.repository import AppointmentRepository
 from app.features.appointments.service import AppointmentService
 from app.features.pets.repository import PetRepository
 from app.features.clinic.repository import ClinicStatusRepository
+from datetime import date as date_type
 
 
 router = APIRouter(prefix="/api/v1/appointments", tags=["Appointments"])
+
+
+@router.get("/available-slots")
+def get_available_slots(
+    date: date_type = Query(..., description="Date to check for available slots (YYYY-MM-DD)"),
+    service_type: str = Query("routine", description="Service type: vaccination, routine, surgery, or emergency"),
+    session: Session = Depends(get_session)
+):
+    """
+    Get available appointment time slots for a given date.
+    
+    Returns time slots within clinic operating hours (8:00 AM - 8:00 PM)
+    that don't conflict with existing appointments. Slots are generated
+    in 30-minute increments based on the service type duration.
+    
+    No authentication required — anyone can check availability.
+    
+    Args:
+        date: Date to check (YYYY-MM-DD format)
+        service_type: Type of service to determine slot duration
+        session: Database session
+        
+    Returns:
+        List of available time slots with start_time and end_time
+    """
+    appointment_repo = AppointmentRepository(session)
+    pet_repo = PetRepository(session)
+    clinic_status_repo = ClinicStatusRepository(session)
+    
+    appointment_service = AppointmentService(
+        appointment_repo, pet_repo, clinic_status_repo
+    )
+    
+    slots = appointment_service.get_available_slots(date, service_type)
+    session.commit()
+    return slots
 
 
 @router.post("", response_model=AppointmentResponse, status_code=status.HTTP_201_CREATED)

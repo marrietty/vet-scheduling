@@ -1,5 +1,5 @@
 """Appointment service for business logic."""
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date, time, timedelta
 from typing import List, Optional
 import uuid
 
@@ -14,7 +14,11 @@ from app.common.exceptions import (
     ForbiddenException,
     BadRequestException
 )
-from app.common.utils import calculate_end_time
+from app.common.utils import calculate_end_time, SERVICE_DURATIONS
+
+# Clinic operating hours
+CLINIC_OPEN_HOUR = 8   # 8:00 AM
+CLINIC_CLOSE_HOUR = 20  # 8:00 PM
 
 
 class AppointmentService:
@@ -96,8 +100,23 @@ class AppointmentService:
         if start_time <= datetime.now(timezone.utc):
             raise BadRequestException("Appointment time must be in the future")
         
-        # 3. Calculate end time (Requirement 5.5)
+        # 3. Validate appointment is within clinic hours (8am-8pm)
+        start_hour = start_time.hour
         end_time = calculate_end_time(start_time, service_type)
+        end_hour = end_time.hour
+        end_minute = end_time.minute
+        
+        if start_hour < CLINIC_OPEN_HOUR or start_hour >= CLINIC_CLOSE_HOUR:
+            raise BadRequestException(
+                f"Appointments must be between {CLINIC_OPEN_HOUR}:00 AM and {CLINIC_CLOSE_HOUR - 12}:00 PM"
+            )
+        
+        # End time cannot exceed clinic closing
+        if end_hour > CLINIC_CLOSE_HOUR or (end_hour == CLINIC_CLOSE_HOUR and end_minute > 0):
+            raise BadRequestException(
+                f"Appointment would end after clinic closes at {CLINIC_CLOSE_HOUR - 12}:00 PM. "
+                "Please choose an earlier time slot."
+            )
         
         # 4. Check clinic is open (Requirement 5.10)
         clinic_status = self.clinic_status_repo.get_current_status()
@@ -294,10 +313,10 @@ class AppointmentService:
             raise ForbiddenException("You can only reschedule appointments for your own pets")
         
         # 3. Verify appointment status is 'scheduled' or 'confirmed' (Requirement 6.8)
-        if appointment.status not in ["scheduled", "confirmed"]:
+        if appointment.status not in ["pending", "confirmed"]:
             raise BadRequestException(
                 f"Cannot reschedule {appointment.status} appointments. "
-                "Only scheduled or confirmed appointments can be rescheduled."
+                "Only pending or confirmed appointments can be rescheduled."
             )
         
         # 4. Check clinic is open during new time (Requirement 6.4)
@@ -317,3 +336,83 @@ class AppointmentService:
         )
         
         return updated_appointment
+
+    def get_available_slots(
+        self,
+        target_date: date,
+        service_type: str
+    ) -> List[dict]:
+        """Get available appointment time slots for a given date.
+        
+        Generates all possible time slots during clinic hours (8am-8pm)
+        based on service duration, then filters out slots that overlap
+        with existing pending/confirmed appointments.
+        
+        Args:
+            target_date: The date to check for available slots
+            service_type: Type of service to determine slot duration
+            
+        Returns:
+            List of dicts with start_time and end_time for each available slot
+            
+        Raises:
+            BadRequestException: If clinic is closed or date is in the past
+        """
+        # Check clinic status
+        clinic_status = self.clinic_status_repo.get_current_status()
+        if clinic_status.status == "close":
+            raise BadRequestException("Clinic is closed")
+        
+        # Check date is not in the past
+        today = datetime.now(timezone.utc).date()
+        if target_date < today:
+            raise BadRequestException("Cannot view slots for past dates")
+        
+        # Get service duration
+        duration_minutes = SERVICE_DURATIONS.get(service_type, 30)
+        
+        # Define day boundaries
+        day_start = datetime(
+            target_date.year, target_date.month, target_date.day,
+            CLINIC_OPEN_HOUR, 0, tzinfo=timezone.utc
+        )
+        clinic_close = datetime(
+            target_date.year, target_date.month, target_date.day,
+            CLINIC_CLOSE_HOUR, 0, tzinfo=timezone.utc
+        )
+        
+        # Fetch ALL existing appointments for this day in ONE query
+        existing_appointments = self.appointment_repo.get_appointments_for_day(
+            day_start, clinic_close
+        )
+        
+        # Helper: check overlap in-memory against fetched appointments
+        def has_overlap(slot_start: datetime, slot_end: datetime) -> bool:
+            for appt in existing_appointments:
+                if appt.start_time < slot_end and appt.end_time > slot_start:
+                    return True
+            return False
+        
+        # Generate all possible slots from 8am to 8pm
+        now = datetime.now(timezone.utc)
+        slots = []
+        current_start = day_start
+        
+        while current_start + timedelta(minutes=duration_minutes) <= clinic_close:
+            slot_end = current_start + timedelta(minutes=duration_minutes)
+            
+            # For today, skip slots that are in the past
+            if target_date == today and current_start <= now:
+                current_start += timedelta(minutes=30)
+                continue
+            
+            if not has_overlap(current_start, slot_end):
+                slots.append({
+                    "start_time": current_start.isoformat(),
+                    "end_time": slot_end.isoformat(),
+                })
+            
+            # Move to next slot in 30-minute increments
+            current_start += timedelta(minutes=30)
+        
+        return slots

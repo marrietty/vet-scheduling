@@ -5,8 +5,8 @@ from typing import Optional, TYPE_CHECKING
 import uuid
 
 if TYPE_CHECKING:
-    from backend.app.features.pets.models import Pet
-    from backend.app.features.users.models import User
+    from app.features.pets.models import Pet
+    from app.features.users.models import User
 
 
 class Appointment(SQLModel, table=True):

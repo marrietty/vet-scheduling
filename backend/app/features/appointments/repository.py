@@ -131,6 +131,32 @@ class AppointmentRepository:
         result = self.session.exec(statement).first()
         return result is not None
     
+    def get_appointments_for_day(
+        self,
+        day_start: datetime,
+        day_end: datetime
+    ) -> List[Appointment]:
+        """Get all active appointments (pending/confirmed) for a given day.
+        
+        Used to efficiently check slot availability by fetching all
+        appointments in one query instead of per-slot queries.
+        
+        Args:
+            day_start: Start of the day (inclusive)
+            day_end: End of the day (exclusive)
+            
+        Returns:
+            List of active Appointment objects for the day
+        """
+        statement = select(Appointment).where(
+            and_(
+                Appointment.status.in_(["pending", "confirmed"]),
+                Appointment.start_time < day_end,
+                Appointment.end_time > day_start
+            )
+        )
+        return list(self.session.exec(statement).all())
+    
     def create(self, appointment: Appointment) -> Appointment:
         """Create a new appointment in the database.
         
