@@ -2,20 +2,20 @@
  * User Profile Form Component
  */
 
-import { useState, FormEvent, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import type { FormEvent } from 'react';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { Alert } from '../ui/Alert';
-import { UserProfileResponse, UserProfileUpdate } from '../../types';
+import type { UserProfileResponse, UserProfileUpdate } from '../../types';
 
 interface ProfileFormProps {
   profile: UserProfileResponse;
   onSubmit: (data: UserProfileUpdate) => Promise<void>;
-  isLoading: boolean;
   error: string | null;
 }
 
-export function ProfileForm({ profile, onSubmit, isLoading, error }: ProfileFormProps) {
+export function ProfileForm({ profile, onSubmit, error }: ProfileFormProps) {
   const [formData, setFormData] = useState({
     full_name: profile.full_name,
     email: profile.email,
@@ -23,6 +23,9 @@ export function ProfileForm({ profile, onSubmit, isLoading, error }: ProfileForm
     city: profile.city || '',
   });
   const [success, setSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
 
   useEffect(() => {
     setFormData({
@@ -36,7 +39,15 @@ export function ProfileForm({ profile, onSubmit, isLoading, error }: ProfileForm
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setSuccess(false);
-    
+    setSubmitError(null);
+    setPhoneError(null);
+
+    // Client-side phone validation
+    if (formData.phone && !/^\+?[\d\s\-()]{7,20}$/.test(formData.phone)) {
+      setPhoneError('Please enter a valid phone number (e.g. +1-555-0123)');
+      return;
+    }
+
     const updates: UserProfileUpdate = {};
     if (formData.full_name !== profile.full_name) updates.full_name = formData.full_name;
     if (formData.email !== profile.email) updates.email = formData.email;
@@ -47,12 +58,16 @@ export function ProfileForm({ profile, onSubmit, isLoading, error }: ProfileForm
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
       await onSubmit(updates);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
-    } catch (err) {
-      // Error handled by hook
+    } catch (err: any) {
+      setSubmitError(err.message || 'Failed to update profile');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -64,9 +79,9 @@ export function ProfileForm({ profile, onSubmit, isLoading, error }: ProfileForm
         </Alert>
       )}
 
-      {error && (
+      {(error || submitError) && (
         <Alert type="error" title="Error">
-          {error}
+          {submitError || error}
         </Alert>
       )}
 
@@ -90,8 +105,12 @@ export function ProfileForm({ profile, onSubmit, isLoading, error }: ProfileForm
         label="Phone"
         type="tel"
         value={formData.phone}
-        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+        onChange={(e) => {
+          setFormData({ ...formData, phone: e.target.value });
+          setPhoneError(null);
+        }}
         placeholder="+1-555-0123"
+        error={phoneError || undefined}
       />
 
       <Input
@@ -103,7 +122,7 @@ export function ProfileForm({ profile, onSubmit, isLoading, error }: ProfileForm
       />
 
       <div style={{ paddingTop: '1rem' }}>
-        <Button type="submit" isLoading={isLoading}>
+        <Button type="submit" isLoading={isSubmitting} disabled={isSubmitting}>
           Update Profile
         </Button>
       </div>
