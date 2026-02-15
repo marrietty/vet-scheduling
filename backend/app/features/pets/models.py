@@ -35,7 +35,7 @@ class Pet(SQLModel, table=True):
     breed: Optional[str] = Field(default=None, max_length=100)
     date_of_birth: Optional[date] = Field(default=None)
     last_vaccination: Optional[datetime] = Field(default=None)
-    medical_history: dict = Field(default={}, sa_column=Column(JSON))
+    medical_history: dict = Field(default_factory=dict, sa_column=Column(JSON))
     notes: Optional[str] = Field(default=None)
     
     # Foreign key
