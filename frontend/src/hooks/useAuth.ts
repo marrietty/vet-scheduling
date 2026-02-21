@@ -35,6 +35,9 @@ export function useAuthActions() {
       // POST /api/v1/auth/register
       const response = await apiClient.post<TokenResponse>('/api/v1/auth/register', data);
 
+      // Store token so apiClient can use it for subsequent requests
+      localStorage.setItem('access_token', response.access_token);
+
       // Decode JWT to get user info
       const decoded = jwtDecode<JWTPayload>(response.access_token);
 
@@ -56,6 +59,7 @@ export function useAuthActions() {
       return response;
     } catch (err: any) {
       setError(err.message || 'Registration failed');
+      localStorage.removeItem('access_token');
       throw err;
     } finally {
       setIsLoading(false);
